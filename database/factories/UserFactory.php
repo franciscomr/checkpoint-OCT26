@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Modules\Auth\Enums\UserStatus;
+use App\Modules\Shared\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -25,11 +27,13 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'tenant_id' => null, // Se establece en null por defecto, se puede asignar explícitamente al crear un usuario
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'status' => UserStatus::ACTIVE,
         ];
     }
 
@@ -38,8 +42,15 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function forTenant(Tenant $tenant): static
+    {
+        return $this->state(fn() => [
+            'tenant_id' => $tenant->getKey(),
         ]);
     }
 }
